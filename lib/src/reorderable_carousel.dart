@@ -31,8 +31,7 @@ class ReorderableCarousel extends StatefulWidget {
   ///
   /// Will be called to builded the dragged item if [draggedItemBuilder] isn't
   /// defined
-  final Widget Function(double itemWidth, int index, bool isSelected)
-      itemBuilder;
+  final Widget Function(double itemWidth, int index, bool isSelected) itemBuilder;
 
   /// Builder that's called when the item at [index] is being dragged.
   final Widget Function(double itemWidth, int index)? draggedItemBuilder;
@@ -56,6 +55,9 @@ class ReorderableCarousel extends StatefulWidget {
   /// icons will never disappear.
   final int? maxNumberItems;
 
+  final bool showAddItemButton;
+  final double padding;
+
   /// The duration for scrolling to the next selected item.
   final Duration scrollToDuration;
 
@@ -71,6 +73,8 @@ class ReorderableCarousel extends StatefulWidget {
     this.onItemSelected,
     this.itemWidthFraction = 3,
     this.maxNumberItems,
+    this.showAddItemButton = true,
+    this.padding = 16,
     this.draggedItemBuilder,
     this.scrollToDuration = const Duration(milliseconds: 350),
     this.scrollToCurve = Curves.linear,
@@ -90,17 +94,20 @@ class _ReorderableCarouselState extends State<ReorderableCarousel> {
   double _startingOffset = 0;
   double _endingOffset = 0;
 
-  // includes padding around icon button
-  final double _iconSize = 24 + 16.0;
+  double get _iconSize => widget.showAddItemButton ? widget.padding : 24 + widget.padding;
   late ScrollController _controller;
   int _selectedIdx = 0;
-
-  final double _padding = 8.0;
 
   @override
   void initState() {
     super.initState();
-    _controller = ScrollController();
+    _controller = ScrollController()..addListener(scrollListener);
+  }
+
+  void scrollListener() {
+    // update the selected index
+    int idx = (_controller.offset / (_itemMaxWidth + _iconSize)).round();
+    _updateSelectedIndex(idx);
   }
 
   @override
@@ -178,19 +185,17 @@ class _ReorderableCarouselState extends State<ReorderableCarousel> {
           itemBuilder: (context, i) {
             return Row(
               key: ValueKey(i),
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Listener(
                   behavior: HitTestBehavior.opaque,
                   onPointerDown: (event) {
-                    _updateSelectedIndex(i - 1);
-
                     final list = SliverReorderableList.maybeOf(context);
 
                     list?.startItemDragReorder(
                       index: i,
                       event: event,
-                      recognizer:
-                          DelayedMultiDragGestureRecognizer(debugOwner: this),
+                      recognizer: DelayedMultiDragGestureRecognizer(debugOwner: this),
                     );
                     _PointerSmuggler(debugOwner: this)
                       ..onStart = ((d) {
@@ -262,8 +267,7 @@ class _ReorderableCarouselState extends State<ReorderableCarousel> {
 
   Widget _buildAddItemIcon(int index) {
     // once we have maxNumberItems items, don't allow anymore items to be built
-    if ((widget.maxNumberItems != null &&
-            widget.numItems < widget.maxNumberItems!) ||
+    if ((widget.maxNumberItems != null && widget.numItems < widget.maxNumberItems!) ||
         widget.maxNumberItems == null) {
       return AnimatedOpacity(
         opacity: _dragInProgress ? 0.0 : 1.0,
@@ -286,14 +290,12 @@ class _ReorderableCarouselState extends State<ReorderableCarousel> {
           },
         ),
       );
-    } else {
-      return SizedBox(
-        width: _iconSize,
-      );
     }
+    return SizedBox(width: _iconSize);
   }
 
   void _updateSelectedIndex(int index) {
+    if (_selectedIdx == index) return;
     widget.onItemSelected?.call(index);
     setState(() {
       _selectedIdx = index;
