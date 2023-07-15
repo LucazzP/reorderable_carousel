@@ -135,8 +135,6 @@ class _ReorderableCarouselState extends State<ReorderableCarousel> {
           _scrollToBox(_selectedIdx);
         }
 
-        const numOfPaddingWidgetsOnChildren = 2;
-
         final children = [
           SizedBox(
             width: _startingOffset,
@@ -146,6 +144,7 @@ class _ReorderableCarouselState extends State<ReorderableCarousel> {
               onTap: () {
                 _scrollToBox(i);
               },
+              onLongPress: (widget.canDragItem?.call(i) ?? true) ? null : () {},
               child: ConstrainedBox(
                 constraints: BoxConstraints.tightFor(width: _itemMaxWidth),
                 child: widget.itemBuilder(_itemMaxWidth, i, i == _selectedIdx),
@@ -189,46 +188,37 @@ class _ReorderableCarouselState extends State<ReorderableCarousel> {
           },
           itemCount: children.length,
           itemBuilder: (context, i) {
-            final realIndex = i - numOfPaddingWidgetsOnChildren;
-            final dragEnabled = realIndex < 0 ? false : widget.canDragItem?.call(realIndex) ?? true;
             return Row(
               key: ValueKey(i),
               mainAxisSize: MainAxisSize.min,
               children: [
-                GestureDetector(
-                  onLongPress: dragEnabled ? null : () {},
-                  child: Listener(
-                    behavior: HitTestBehavior.opaque,
-                    onPointerDown: dragEnabled
-                        ? (event) {
-                            final list = SliverReorderableList.maybeOf(context);
-                
-                            list?.startItemDragReorder(
-                              index: i,
-                              event: event,
-                              recognizer: DelayedMultiDragGestureRecognizer(debugOwner: this),
-                            );
-                            _PointerSmuggler(debugOwner: this)
-                              ..onStart = ((d) {
-                                // the wait time has passed and the drag has
-                                // started
-                                setState(() {
-                                  _dragInProgress = true;
-                                });
-                                return;
-                              })
-                              ..addPointer(event);
-                          }
-                        : null,
-                    onPointerUp: dragEnabled
-                        ? (e) {
-                            setState(() {
-                              _dragInProgress = false;
-                            });
-                          }
-                        : null,
-                    child: children[i],
-                  ),
+                Listener(
+                  behavior: HitTestBehavior.opaque,
+                  onPointerDown: (event) {
+                    final list = SliverReorderableList.maybeOf(context);
+
+                    list?.startItemDragReorder(
+                      index: i,
+                      event: event,
+                      recognizer: DelayedMultiDragGestureRecognizer(debugOwner: this),
+                    );
+                    _PointerSmuggler(debugOwner: this)
+                      ..onStart = ((d) {
+                        // the wait time has passed and the drag has
+                        // started
+                        setState(() {
+                          _dragInProgress = true;
+                        });
+                        return;
+                      })
+                      ..addPointer(event);
+                  },
+                  onPointerUp: (e) {
+                    setState(() {
+                      _dragInProgress = false;
+                    });
+                  },
+                  child: children[i],
                 ),
 
                 // no plus icons for the invisible boxes
