@@ -135,7 +135,9 @@ class _ReorderableCarouselState extends State<ReorderableCarousel> {
           _scrollToBox(_selectedIdx);
         }
 
-        var children = [
+        const numOfPaddingWidgetsOnChildren = 2;
+
+        final children = [
           SizedBox(
             width: _startingOffset,
           ),
@@ -187,7 +189,8 @@ class _ReorderableCarouselState extends State<ReorderableCarousel> {
           },
           itemCount: children.length,
           itemBuilder: (context, i) {
-            final dragEnabled = widget.canDragItem?.call(i) ?? true;
+            final realIndex = i - numOfPaddingWidgetsOnChildren;
+            final dragEnabled = realIndex < 0 ? false : widget.canDragItem?.call(realIndex) ?? true;
             return Row(
               key: ValueKey(i),
               mainAxisSize: MainAxisSize.min,
