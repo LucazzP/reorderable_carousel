@@ -191,46 +191,49 @@ class _ReorderableCarouselState extends State<ReorderableCarousel> {
           itemBuilder: (context, i) {
             final realIndex = i - numOfPaddingWidgetsOnChildren;
             final dragEnabled = realIndex < 0 ? false : widget.canDragItem?.call(realIndex) ?? true;
-            return Row(
-              key: ValueKey(i),
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Listener(
-                  behavior: HitTestBehavior.opaque,
-                  onPointerDown: dragEnabled
-                      ? (event) {
-                          final list = SliverReorderableList.maybeOf(context);
+            return GestureDetector(
+              onLongPress: dragEnabled ? null : () {},
+              child: Row(
+                key: ValueKey(i),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Listener(
+                    behavior: HitTestBehavior.opaque,
+                    onPointerDown: dragEnabled
+                        ? (event) {
+                            final list = SliverReorderableList.maybeOf(context);
 
-                          list?.startItemDragReorder(
-                            index: i,
-                            event: event,
-                            recognizer: DelayedMultiDragGestureRecognizer(debugOwner: this),
-                          );
-                          _PointerSmuggler(debugOwner: this)
-                            ..onStart = ((d) {
-                              // the wait time has passed and the drag has
-                              // started
-                              setState(() {
-                                _dragInProgress = true;
-                              });
-                              return;
-                            })
-                            ..addPointer(event);
-                        }
-                      : null,
-                  onPointerUp: dragEnabled
-                      ? (e) {
-                          setState(() {
-                            _dragInProgress = false;
-                          });
-                        }
-                      : null,
-                  child: children[i],
-                ),
+                            list?.startItemDragReorder(
+                              index: i,
+                              event: event,
+                              recognizer: DelayedMultiDragGestureRecognizer(debugOwner: this),
+                            );
+                            _PointerSmuggler(debugOwner: this)
+                              ..onStart = ((d) {
+                                // the wait time has passed and the drag has
+                                // started
+                                setState(() {
+                                  _dragInProgress = true;
+                                });
+                                return;
+                              })
+                              ..addPointer(event);
+                          }
+                        : null,
+                    onPointerUp: dragEnabled
+                        ? (e) {
+                            setState(() {
+                              _dragInProgress = false;
+                            });
+                          }
+                        : null,
+                    child: children[i],
+                  ),
 
-                // no plus icons for the invisible boxes
-                if (i != 0 && i != children.length - 1) _buildAddItemIcon(i),
-              ],
+                  // no plus icons for the invisible boxes
+                  if (i != 0 && i != children.length - 1) _buildAddItemIcon(i),
+                ],
+              ),
             );
           },
           proxyDecorator: (child, index, animation) {
