@@ -191,18 +191,18 @@ class _ReorderableCarouselState extends State<ReorderableCarousel> {
           itemBuilder: (context, i) {
             final realIndex = i - numOfPaddingWidgetsOnChildren;
             final dragEnabled = realIndex < 0 ? false : widget.canDragItem?.call(realIndex) ?? true;
-            return GestureDetector(
-              onLongPress: dragEnabled ? null : () {},
-              child: Row(
-                key: ValueKey(i),
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Listener(
+            return Row(
+              key: ValueKey(i),
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onLongPress: dragEnabled ? null : () {},
+                  child: Listener(
                     behavior: HitTestBehavior.opaque,
                     onPointerDown: dragEnabled
                         ? (event) {
                             final list = SliverReorderableList.maybeOf(context);
-
+                
                             list?.startItemDragReorder(
                               index: i,
                               event: event,
@@ -229,11 +229,11 @@ class _ReorderableCarouselState extends State<ReorderableCarousel> {
                         : null,
                     child: children[i],
                   ),
+                ),
 
-                  // no plus icons for the invisible boxes
-                  if (i != 0 && i != children.length - 1) _buildAddItemIcon(i),
-                ],
-              ),
+                // no plus icons for the invisible boxes
+                if (i != 0 && i != children.length - 1) _buildAddItemIcon(i),
+              ],
             );
           },
           proxyDecorator: (child, index, animation) {
