@@ -57,6 +57,7 @@ class ReorderableCarousel extends StatefulWidget {
 
   final bool showAddItemButton;
   final double padding;
+  final BorderRadius? borderRadius;
 
   /// The duration for scrolling to the next selected item.
   final Duration scrollToDuration;
@@ -78,6 +79,7 @@ class ReorderableCarousel extends StatefulWidget {
     this.draggedItemBuilder,
     this.scrollToDuration = const Duration(milliseconds: 350),
     this.scrollToCurve = Curves.linear,
+    this.borderRadius,
     Key? key,
   })  : assert(numItems >= 1, "You need at least one item"),
         assert(itemWidthFraction >= 1),
@@ -255,6 +257,7 @@ class _ReorderableCarouselState extends State<ReorderableCarousel> {
                 scale: size,
                 child: Material(
                   elevation: 4,
+                  borderRadius: widget.borderRadius,
                   child: item,
                 ),
               ),
